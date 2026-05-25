@@ -24,7 +24,26 @@ app.use(cors());
 app.use(express.json({ limit: '4mb' }));
 app.use(express.static('public'));
 
-// ── auth · RapidAPI proxy or direct key ─────────────
+// ── auth · RapidAPI proxy or direct key · free demo tier ────
+// Simple in-memory rate limit for the demo tier (per IP, soft cap)
+const demoIpHits = new Map(); // ip -> { count, windowStart }
+const DEMO_LIMIT = 10;          // requests
+const DEMO_WINDOW_MS = 60 * 60 * 1000; // per hour
+function demoLimit(req, res) {
+  const ip = (req.headers['x-forwarded-for'] || req.ip || 'unknown').split(',')[0].trim();
+  const now = Date.now();
+  let rec = demoIpHits.get(ip);
+  if (!rec || now - rec.windowStart > DEMO_WINDOW_MS) {
+    rec = { count: 0, windowStart: now };
+    demoIpHits.set(ip, rec);
+  }
+  rec.count++;
+  if (rec.count > DEMO_LIMIT) {
+    res.status(429).json({ error: 'demo rate limit · ' + DEMO_LIMIT + '/hour · get a RapidAPI key for unlimited' });
+    return false;
+  }
+  return true;
+}
 function auth(req, res, next) {
   const proxySecret = process.env.RAPIDAPI_PROXY_SECRET;
   const incomingSecret = req.headers['x-rapidapi-proxy-secret'] || req.headers['x-proxy-secret'];
@@ -35,9 +54,11 @@ function auth(req, res, next) {
     return next();
   }
   const key = req.headers.authorization?.replace('Bearer ', '') || req.headers['x-api-key'];
-  if (!key) return res.status(401).json({ error: 'API key required' });
   if (key === ADMIN_KEY) { req.tier = 'admin'; return next(); }
-  return res.status(403).json({ error: 'Invalid API key' });
+  // Free demo tier — rate-limited per IP
+  if (!demoLimit(req, res)) return;
+  req.tier = 'demo';
+  return next();
 }
 
 // ── /health ────────────────────────────────────────
