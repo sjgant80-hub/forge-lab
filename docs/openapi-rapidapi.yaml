@@ -1,12 +1,12 @@
 openapi: 3.0.3
 info:
   title: Forge Lab
-  version: 1.0.0
+  version: 1.1.0
   description: |
-    Forge Lab turns a domain expert's plain-English workflow description into a sovereign single-file HTML tool. Lab, clinic, farm, factory, any domain — describe what you do, get a tool built around YOUR process. All 7 v18 layers baked in: FACE, SWARM, CASCADE, BLOOM, PERSIST, SKIN, ASS. Zero deps, runs offline, your data stays on-device.
+    Forge Lab turns a domain expert's plain-English workflow description into a sovereign single-file HTML tool. Lab, clinic, farm, factory, any domain — describe what you do, get a tool built around YOUR process. All 7 v18 layers baked in (FACE, SWARM, CASCADE, BLOOM, PERSIST, SKIN, ASS) plus an Ed25519-signed Konomi licence in every output. Zero deps, runs offline, your data stays on-device.
 
 servers:
-  - url: https://forge-lab.onrender.com
+  - url: https://forge-lab-p9lm.onrender.com
 
 paths:
 
@@ -23,7 +23,7 @@ paths:
               example:
                 status: ok
                 service: forge-lab
-                version: "1.0.0"
+                version: "1.1.0"
                 prime: 47
                 providers: [anthropic]
                 forge_stages: [parse, map, select, build, verify]
@@ -53,7 +53,7 @@ paths:
       operationId: forgeExpert
       summary: Forge a sovereign tool from an expert's workflow description
       description: |
-        Submit a domain (lab, clinic, farm, etc), a plain-English description of the workflow, and the workflow steps in order. Returns a base64-encoded HTML file plus metadata. The HTML file is the full sovereign tool — open in any browser, runs entirely client-side. Data lives in localStorage.
+        Submit a domain (lab, clinic, farm, etc), a plain-English description of the workflow, and the workflow steps in order. Returns a base64-encoded HTML file plus metadata. The HTML file is the full sovereign tool — open in any browser, runs entirely client-side. Data lives in localStorage. Every forged tool ships with a 30-day trial Konomi licence signed at forge time using Ed25519.
       requestBody:
         required: true
         content:
@@ -103,7 +103,7 @@ paths:
               example:
                 tool_file: "PCFkb2N0eXBlIGh0bWw+..."
                 filename: "pathlabpro.html"
-                size_kb: 220
+                size_kb: 38
                 detected_agents:
                   - { id: "omega", glyph: "Ω", name: "Orchestrator", role: "orchestrator" }
                   - { id: "alpha", glyph: "α", name: "Tracker", role: "research" }
@@ -118,18 +118,77 @@ paths:
                   - { state: "archive", label: "archived", glyph: "◯" }
                 compliance_applied: ["HIPAA", "ISO 15189"]
                 verification:
-                  passed: 12
-                  total: 12
+                  passed: 14
+                  total: 14
                   ok: true
                   failed: []
                 licence:
                   trial_days: 30
                   forge_id: "fg_a1b2c3d4e5f6"
-                  prime: 37
+                  prime: 139
+                  envelope: "eyJwYXlsb2FkIjp7InYiOjEs..."
+                  issuer: konomi
+                  algorithm: ed25519
+                  pubkey_b64: "bQWcb/SgeWVIEa0H+YYGhzohMfo9zcDysqZEvzYtXTw="
                 forge_meta:
                   tool_name: "PathLab Pro"
                   domain: "biochemistry lab"
                   built: "2026-05-25T12:00:00Z"
-                  forge_ms: 18420
+                  forge_ms: 11625
+              schema:
+                type: object
+
+  /v1/konomi/pubkey:
+    get:
+      operationId: konomiPubkey
+      summary: Konomi master public verify-key
+      description: |
+        Returns the Konomi master Ed25519 public verify-key. This is the same key embedded in every forged tool — clients can use it to verify licence envelopes offline using WebCrypto.
+      responses:
+        '200':
+          description: Public verify-key
+          content:
+            application/json:
+              example:
+                algorithm: ed25519
+                pubkey_b64: "bQWcb/SgeWVIEa0H+YYGhzohMfo9zcDysqZEvzYtXTw="
+                issuer: konomi
+              schema:
+                type: object
+
+  /v1/konomi/verify:
+    post:
+      operationId: konomiVerify
+      summary: Verify a Konomi licence envelope
+      description: |
+        Submit a base64 licence envelope (returned at forge time or minted via /v1/konomi/licence). Returns whether the signature is valid and the licence is not expired.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              envelope: "eyJwYXlsb2FkIjp7InYiOjEs..."
+            schema:
+              type: object
+              required: [envelope]
+              properties:
+                envelope: { type: string }
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              example:
+                ok: true
+                payload:
+                  v: 1
+                  forge_id: "fg_a1b2c3d4e5f6"
+                  tool_id: "pathlabpro"
+                  tool_prime: 139
+                  tier: trial
+                  features: ["core", "mesh_inbound"]
+                  issued: "2026-05-25T12:00:00Z"
+                  expires: "2026-06-24T12:00:00Z"
+                  issuer: konomi
               schema:
                 type: object
