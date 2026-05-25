@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>◊·κ=1 · Forge Lab · Domain Expert Tool Builder</title>
+<meta name="description" content="Describe your workflow. Get back a sovereign single-file HTML tool built around YOUR process. Labs, clinics, farms, factories — any domain.">
+<meta property="og:title" content="Forge Lab — Domain Expert Tool Builder">
+<meta property="og:description" content="You bring the knowledge. We bring the architecture. The tool is yours.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0b0e; --surface:#12141a; --s2:#181b22; --border:#252932;
+  --text:#a8b0bc; --dim:#6a727e; --bright:#e6e8ee;
+  --primary:#5b8def; --accent:#3a9a72; --warn:#c87e3a; --fail:#c84a4a;
+  --gold:#c2a060;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Syne',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55}
+code,pre,.mono{font-family:'DM Mono',ui-monospace,monospace}
+.serif{font-family:'Fraunces',Georgia,serif;font-style:italic}
+.app{max-width:1100px;margin:0 auto;padding:30px 22px 80px}
+header{display:flex;align-items:center;gap:14px;padding-bottom:30px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700}
+.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 4px rgba(91,141,239,.1)}
+.brand .name{font-size:18px;color:var(--bright)}
+.brand .sub{font-size:11px;color:var(--dim);letter-spacing:.18em;text-transform:uppercase}
+nav.top{margin-left:auto;display:flex;gap:18px;align-items:center;font-size:13px}
+nav.top a{color:var(--dim);text-decoration:none}
+nav.top a:hover{color:var(--bright)}
+.mesh-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);display:inline-block}
+
+.hero{padding:30px 0 50px}
+.hero h1{font-size:42px;line-height:1.1;color:var(--bright);font-weight:600;letter-spacing:-.02em;margin-bottom:18px}
+.hero h1 .accent{color:var(--gold)}
+.hero .lead{font-size:18px;color:var(--text);max-width:620px;line-height:1.55;margin-bottom:18px}
+.hero .lead em{color:var(--bright);font-style:normal;font-weight:500}
+.hero .quote{font-family:'Fraunces',serif;font-style:italic;font-size:17px;color:var(--dim);max-width:540px;line-height:1.55;border-left:2px solid var(--gold);padding-left:14px;margin-top:18px}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px}
+@media(max-width:780px){.split{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px}
+.card h3{font-size:15px;color:var(--bright);font-weight:600;margin-bottom:10px;letter-spacing:.01em}
+.card .meta{font-size:11px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.card .body{font-size:14px;color:var(--text);line-height:1.6}
+.card .body p+p{margin-top:8px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--bright);font:inherit;padding:10px 12px;border-radius:8px;font-size:14px}
+.field textarea{font-family:'DM Mono',monospace;font-size:13px;min-height:110px;resize:vertical;line-height:1.5}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--primary)}
+.field-hint{font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:.02em}
+
+.btn{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:11px 18px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.01em}
+.btn:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn.gold{background:var(--gold);color:#1a1610}
+
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:30px 0}
+@media(max-width:780px){.steps{grid-template-columns:repeat(2,1fr)}}
+.step{padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-align:center}
+.step .num{font-family:'Fraunces',serif;font-size:22px;color:var(--gold);font-style:italic;margin-bottom:5px}
+.step .label{font-size:11px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:999px;background:var(--s2);border:1px solid var(--border);color:var(--dim);font-size:12px}
+
+.output{margin-top:24px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:none}
+.output.show{display:block}
+.output h4{font-size:14px;color:var(--bright);margin-bottom:10px}
+.output pre{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);background:var(--bg);padding:14px;border-radius:8px;overflow:auto;max-height:280px;line-height:1.55}
+.output .row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.output .pill.ok{background:rgba(58,154,114,.18);color:var(--accent);border-color:transparent}
+.output .pill.fail{background:rgba(200,74,74,.18);color:var(--fail);border-color:transparent}
+
+.toast{position:fixed;bottom:22px;right:22px;background:var(--surface);border:1px solid var(--border);color:var(--bright);padding:12px 16px;border-radius:8px;font-size:13px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-color:var(--accent)}
+.toast.fail{border-color:var(--fail)}
+
+footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);font-size:12px;color:var(--dim);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+footer a{color:var(--dim);text-decoration:none}
+footer a:hover{color:var(--bright)}
+
+.example-pill{cursor:pointer;background:var(--s2);border:1px solid var(--border);color:var(--dim);padding:6px 11px;border-radius:999px;font-size:12px;transition:.15s}
+.example-pill:hover{border-color:var(--gold);color:var(--bright)}
+
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--dim);border-top-color:var(--bright);border-radius:50%;animation:spin .8s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="name">Forge Lab</span>
+      <span class="sub">· prime 47 · ◊·κ=1</span>
+    </div>
+    <nav class="top">
+      <a href="#how">how</a>
+      <a href="#forge">forge</a>
+      <a href="https://github.com/sjgant80-hub/forge-lab" target="_blank">github</a>
+      <span><span class="mesh-dot"></span> mesh</span>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>You bring the knowledge.<br><span class="accent">We bring the architecture.</span></h1>
+    <p class="lead">Describe your workflow. In plain English. <em>Get back a sovereign HTML tool</em> built around YOUR process — not someone else's idea of your process.</p>
+    <p class="lead">Labs. Clinics. Farms. Architecture firms. Law firms. Music studios. Restaurants. Trades. Schools. Maritime. Humanitarian. Any domain.</p>
+    <div class="quote">"Every expert knows their workflow better than any software company. None of them can code. The Forge is the bridge."</div>
+  </section>
+
+  <section id="how">
+    <h2 style="font-size:22px;color:var(--bright);margin-bottom:6px;font-weight:600">How it works</h2>
+    <p style="color:var(--dim);font-size:14px;max-width:580px">5 stages. ~30 seconds. One sovereign HTML file out.</p>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><div class="label">parse</div></div>
+      <div class="step"><div class="num">2</div><div class="label">map → ASS</div></div>
+      <div class="step"><div class="num">3</div><div class="label">select agents</div></div>
+      <div class="step"><div class="num">4</div><div class="label">build</div></div>
+      <div class="step"><div class="num">5</div><div class="label">verify</div></div>
+    </div>
+  </section>
+
+  <section id="forge">
+    <div class="split">
+      <div class="card">
+        <h3>1 · describe your workflow</h3>
+        <div class="meta">plain english · what you do all day</div>
+
+        <div class="field">
+          <label>domain</label>
+          <input id="f-domain" type="text" placeholder="e.g. biochemistry lab, veterinary clinic, organic farm" value="">
+        </div>
+
+        <div class="field">
+          <label>what you do (free-form)</label>
+          <textarea id="f-description" placeholder="describe your daily workflow, the data you collect, the decisions you make, what currently frustrates you about existing tools…"></textarea>
+        </div>
+
+        <div class="field">
+          <label>workflow steps (one per line, in order)</label>
+          <textarea id="f-steps" placeholder="receive sample from clinic
+log sample into tracking
+run assay
+record raw results
+apply quality control
+generate report for clinician
+archive results"></textarea>
+        </div>
+
+        <div class="field">
+          <label>brand name (the tool name)</label>
+          <input id="f-brand" type="text" placeholder="e.g. PathLab Pro">
+        </div>
+
+        <div class="field">
+          <label>brand colour (hex)</label>
+          <input id="f-color" type="text" placeholder="#1a3a5c" value="#5b8def">
+        </div>
+
+        <div class="row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px">
+          <button class="btn gold" id="forge-btn" onclick="runForge()">◊ forge my tool</button>
+          <button class="btn ghost" onclick="loadExample('lab')">load lab example</button>
+          <button class="btn ghost" onclick="loadExample('vet')">vet</button>
+          <button class="btn ghost" onclick="loadExample('farm')">farm</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>2 · what you get back</h3>
+        <div class="meta">sovereign · single file · zero servers</div>
+        <div class="body">
+          <p>One HTML file. ~150-300KB. Opens in any browser. Runs offline once loaded. Your data lives in localStorage on the device — never leaves unless you export it.</p>
+          <p style="margin-top:10px">Built with all 7 v18 layers:</p>
+          <div class="pills">
+            <span class="pill">L1 FACE</span>
+            <span class="pill">L2 SWARM</span>
+            <span class="pill">L3 CASCADE</span>
+            <span class="pill">L4 BLOOM</span>
+            <span class="pill">L5 PERSIST</span>
+            <span class="pill">L6 SKIN</span>
+            <span class="pill">L7 ASS</span>
+          </div>
+          <p style="margin-top:14px">Plus a personalised agent swarm (Ω + 3-8 specialists) tuned to YOUR domain.</p>
+          <p style="margin-top:10px">Plus the fallmesh handshake — if other Fall* tools are open in the same browser, they see each other.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="output" class="output">
+      <h4 id="output-title">◊ forging…</h4>
+      <div id="output-body"></div>
+    </div>
+  </section>
+
+  <footer>
+    <div>◊·κ=1 · Forge Lab · prime 47 · Ω(FACE) · 47 faces</div>
+    <div>
+      <a href="https://sjgant80-hub.github.io/fallmesh/">fallmesh</a> ·
+      <a href="https://rapidapi.com/sjgant80hub">rapidapi</a> ·
+      <a href="https://github.com/sjgant80-hub/forge-lab">source</a>
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const FORGE_API = (window.FORGE_API_BASE) || 'https://forge-lab.onrender.com';
+
+function toast(msg, kind) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (kind || '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.className = 'toast'; }, 3500);
+}
+
+function loadExample(kind) {
+  const ex = EXAMPLES[kind];
+  if (!ex) return;
+  document.getElementById('f-domain').value = ex.domain;
+  document.getElementById('f-description').value = ex.description;
+  document.getElementById('f-steps').value = ex.steps.join('\n');
+  document.getElementById('f-brand').value = ex.brand;
+  document.getElementById('f-color').value = ex.color;
+  toast('example loaded', 'ok');
+}
+
+const EXAMPLES = {
+  lab: {
+    domain: 'biochemistry lab',
+    description: 'Clinical chemistry laboratory. We receive samples from referring clinics with patient identifiers and test requests. Run assays on automated analysers. Apply quality control. Generate reports for clinicians. Archive everything for 7 years per HIPAA / ISO 15189. Pain points: results getting lost between intake and reporting. QC failures sometimes missed. Reports take too long to draft. Need full audit trail.',
+    steps: [
+      'receive sample from clinic with patient ID and test request',
+      'log sample into tracking system with timestamp',
+      'run assay protocol matching the test type',
+      'record raw results from instrument',
+      'apply quality control checks against reference ranges',
+      'flag abnormal results for director review',
+      'draft report for referring clinician',
+      'archive results with 7-year retention'
+    ],
+    brand: 'PathLab Pro',
+    color: '#1a3a5c'
+  },
+  vet: {
+    domain: 'veterinary clinic',
+    description: 'Small animal vet practice. Patient intake covers species, breed, owner details, presenting concern. Exam, diagnostic decisions, treatment plan, follow-up scheduling. Currently using a mix of paper charts and a clunky cloud system. Need: faster intake, treatment plan templates by species, automatic reminder scheduling, exportable records for referrals.',
+    steps: [
+      'patient intake — register species, breed, owner, presenting concern',
+      'perform physical exam and record findings',
+      'order diagnostics if needed',
+      'reach diagnosis and treatment plan',
+      'administer treatment or schedule procedure',
+      'schedule follow-up visit',
+      'send owner reminder',
+      'archive case notes'
+    ],
+    brand: 'VetCare Practice',
+    color: '#3a8b6f'
+  },
+  farm: {
+    domain: 'organic farm',
+    description: 'Small-scale organic vegetable farm with mixed crop rotation. Track plantings by bed and crop, monitor weather and soil moisture, plan harvests against market dates, log all inputs for organic certification audit trail. Need: works offline in the field on a phone, no cloud sync required, complete audit trail for certification body.',
+    steps: [
+      'plan rotation for new growing season',
+      'log planting — bed, crop, variety, date, seed source',
+      'monitor crop progress and weather conditions',
+      'apply inputs and log every application',
+      'plan harvest against market commitments',
+      'record harvest yields per bed',
+      'process and pack for distribution',
+      'archive season records for certification audit'
+    ],
+    brand: 'Greenfield Farm',
+    color: '#7a9a3a'
+  }
+};
+
+async function runForge() {
+  const domain = document.getElementById('f-domain').value.trim();
+  const description = document.getElementById('f-description').value.trim();
+  const stepsRaw = document.getElementById('f-steps').value.trim();
+  const brandName = document.getElementById('f-brand').value.trim();
+  const color = document.getElementById('f-color').value.trim();
+
+  if (!description || description.length < 20) {
+    return toast('describe your workflow (min 20 chars)', 'fail');
+  }
+  const steps = stepsRaw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (steps.length < 2) {
+    return toast('add at least 2 workflow steps', 'fail');
+  }
+
+  const btn = document.getElementById('forge-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>forging…';
+
+  const out = document.getElementById('output');
+  const title = document.getElementById('output-title');
+  const body = document.getElementById('output-body');
+  out.classList.add('show');
+  title.textContent = '◊ forging your tool…';
+  body.innerHTML = '<pre>parse → map → select → build → verify</pre>';
+
+  try {
+    const r = await fetch(FORGE_API + '/v1/forge/expert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': 'public-demo' },
+      body: JSON.stringify({
+        domain,
+        expert_description: description,
+        workflow_steps: steps,
+        data_fields: { auto_detect: true },
+        brand: { name: brandName || undefined, primary_color: color || undefined }
+      })
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ error: 'request failed' }));
+      throw new Error(err.error || ('HTTP ' + r.status));
+    }
+    const j = await r.json();
+
+    title.textContent = '◊ ' + (j.forge_meta?.tool_name || 'tool') + ' forged';
+
+    const agents = (j.detected_agents || []).map(a => '<span class="pill">' + a.glyph + ' ' + a.name + '</span>').join('');
+    const stages = (j.ass_stages || []).map(s => '<span class="pill">' + s.glyph + ' ' + s.label + '</span>').join('');
+    const v = j.verification || {};
+    const vClass = v.ok ? 'ok' : 'fail';
+    const vLabel = v.ok ? ('✓ ' + v.passed + '/' + v.total + ' checks passed') : ('✗ ' + (v.passed||0) + '/' + (v.total||0) + ' checks');
+
+    body.innerHTML = `
+      <pre>${esc(JSON.stringify({
+        tool_name: j.forge_meta?.tool_name,
+        domain: j.forge_meta?.domain,
+        prime: j.licence?.prime,
+        size_kb: j.size_kb,
+        forge_ms: j.forge_meta?.forge_ms,
+        forge_id: j.licence?.forge_id
+      }, null, 2))}</pre>
+      <p style="margin-top:14px;font-size:13px;color:var(--dim)">detected swarm</p>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">${agents}</div>
+      <p style="margin-top:14px;font-size:13px;color:var(--dim)">lifecycle (ASS)</p>
+      <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">${stages}</div>
+      <div class="row">
+        <span class="pill ${vClass}">${vLabel}</span>
+        <button class="btn gold" onclick='downloadHtml(${JSON.stringify(j.tool_file)},${JSON.stringify(j.filename)})'>↓ download ${esc(j.filename)}</button>
+      </div>
+    `;
+    toast('forged · ' + j.size_kb + 'KB', 'ok');
+  } catch (e) {
+    title.textContent = '✗ forge failed';
+    body.innerHTML = '<pre style="color:var(--fail)">' + esc(e.message) + '</pre>';
+    toast('forge failed: ' + e.message, 'fail');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '◊ forge my tool';
+  }
+}
+
+function downloadHtml(b64, filename) {
+  const html = atob(b64);
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  toast('downloaded · open it in your browser', 'ok');
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ◊·κ FALLMESH SHIM — forge-lab joins the mesh
+let meshChannel = null;
+function meshPost(type, data){
+  if (!meshChannel) return;
+  try { meshChannel.postMessage(Object.assign({ type, from:'forgelab', prime:47, name:'Forge Lab', t:Date.now() }, data||{})); } catch(e){}
+}
+(function meshBoot(){
+  if (typeof BroadcastChannel === 'undefined') return;
+  try { meshChannel = new BroadcastChannel('fallmesh'); } catch(e) { return; }
+  window.fallmesh = { post: meshPost };
+  meshChannel.onmessage = (e) => {
+    const m = e.data;
+    if (!m || m.from === 'forgelab') return;
+    if (m.type === 'mesh:ping') {
+      meshPost('mesh:pong', { url: location.origin+location.pathname, capabilities:['forge:expert'] });
+    }
+  };
+  meshPost('node:online', { url: location.origin+location.pathname, layers: 7 });
+  try { console.log('%c◊·κ=1','color:#10b981;font-weight:bold','Forge Lab · prime 47 · mesh online'); } catch(_){}
+})();
+</script>
+</body>
+</html>
