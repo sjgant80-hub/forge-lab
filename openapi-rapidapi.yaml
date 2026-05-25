@@ -1,0 +1,135 @@
+openapi: 3.0.3
+info:
+  title: Forge Lab
+  version: 1.0.0
+  description: |
+    Forge Lab turns a domain expert's plain-English workflow description into a sovereign single-file HTML tool. Lab, clinic, farm, factory, any domain — describe what you do, get a tool built around YOUR process. All 7 v18 layers baked in: FACE, SWARM, CASCADE, BLOOM, PERSIST, SKIN, ASS. Zero deps, runs offline, your data stays on-device.
+
+servers:
+  - url: https://forge-lab.onrender.com
+
+paths:
+
+  /health:
+    get:
+      operationId: health
+      summary: Service health
+      description: Returns status, version, prime, configured LLM providers, and forge stage list.
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              example:
+                status: ok
+                service: forge-lab
+                version: "1.0.0"
+                prime: 47
+                providers: [anthropic]
+                forge_stages: [parse, map, select, build, verify]
+              schema:
+                type: object
+
+  /v1/types:
+    get:
+      operationId: listTypes
+      summary: List forge generators
+      description: Returns the available forge endpoints.
+      responses:
+        '200':
+          description: List of generators
+          content:
+            application/json:
+              example:
+                generators:
+                  - type: expert
+                    endpoint: /v1/forge/expert
+                    description: "Forge a sovereign HTML tool from a domain expert's workflow description"
+              schema:
+                type: object
+
+  /v1/forge/expert:
+    post:
+      operationId: forgeExpert
+      summary: Forge a sovereign tool from an expert's workflow description
+      description: |
+        Submit a domain (lab, clinic, farm, etc), a plain-English description of the workflow, and the workflow steps in order. Returns a base64-encoded HTML file plus metadata. The HTML file is the full sovereign tool — open in any browser, runs entirely client-side. Data lives in localStorage.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              domain: "biochemistry lab"
+              expert_description: "Clinical chemistry lab. Receive samples, run assays, QC, report to clinicians, archive 7 years."
+              workflow_steps:
+                - "receive sample from clinic"
+                - "log sample with timestamp"
+                - "run assay protocol"
+                - "record raw results"
+                - "apply quality control"
+                - "draft report for clinician"
+                - "archive results"
+              data_fields:
+                auto_detect: true
+              compliance: ["HIPAA", "ISO 15189"]
+              brand:
+                name: "PathLab Pro"
+                primary_color: "#1a3a5c"
+            schema:
+              type: object
+              required: [expert_description, workflow_steps]
+              properties:
+                domain:             { type: string }
+                expert_description: { type: string, minLength: 20 }
+                workflow_steps:
+                  type: array
+                  items: { type: string }
+                  minItems: 2
+                data_fields:        { type: object }
+                compliance:
+                  type: array
+                  items: { type: string }
+                users:
+                  type: array
+                  items: { type: object }
+                brand:              { type: object }
+                integrations:      { type: object }
+                ai_features:       { type: object }
+      responses:
+        '200':
+          description: Forged sovereign HTML tool
+          content:
+            application/json:
+              example:
+                tool_file: "PCFkb2N0eXBlIGh0bWw+..."
+                filename: "pathlabpro.html"
+                size_kb: 220
+                detected_agents:
+                  - { id: "omega", glyph: "Ω", name: "Orchestrator", role: "orchestrator" }
+                  - { id: "alpha", glyph: "α", name: "Tracker", role: "research" }
+                  - { id: "gamma", glyph: "γ", name: "Sequencer", role: "sequence" }
+                  - { id: "epsilon", glyph: "ε", name: "Writer", role: "write" }
+                detected_views: ["sample_intake", "active_work", "review_queue", "reporting", "archive"]
+                ass_stages:
+                  - { state: "intake", label: "intake", glyph: "●" }
+                  - { state: "work", label: "in progress", glyph: "┃" }
+                  - { state: "verify", label: "verify", glyph: "♡" }
+                  - { state: "report", label: "report", glyph: "△" }
+                  - { state: "archive", label: "archived", glyph: "◯" }
+                compliance_applied: ["HIPAA", "ISO 15189"]
+                verification:
+                  passed: 12
+                  total: 12
+                  ok: true
+                  failed: []
+                licence:
+                  trial_days: 30
+                  forge_id: "fg_a1b2c3d4e5f6"
+                  prime: 37
+                forge_meta:
+                  tool_name: "PathLab Pro"
+                  domain: "biochemistry lab"
+                  built: "2026-05-25T12:00:00Z"
+                  forge_ms: 18420
+              schema:
+                type: object

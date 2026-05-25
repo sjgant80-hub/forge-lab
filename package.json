@@ -1,0 +1,22 @@
+{
+  "name": "forge-lab",
+  "version": "1.0.0",
+  "description": "◊·κ=1 — Forge Lab — Domain Expert Tool Builder. You bring the architecture. They bring the knowledge.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "cors": "^2.8.5"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sjgant80-hub/forge-lab"
+  }
+}

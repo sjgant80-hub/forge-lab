@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>__TOOL_NAME__ · sovereign</title>
+<meta name="description" content="__TOOL_DESCRIPTION__">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:__BRAND_BG__;
+  --surface:__BRAND_SURFACE__;
+  --s2:__BRAND_S2__;
+  --border:__BRAND_BORDER__;
+  --text:__BRAND_TEXT__;
+  --dim:__BRAND_DIM__;
+  --bright:__BRAND_BRIGHT__;
+  --primary:__BRAND_PRIMARY__;
+  --accent:__BRAND_ACCENT__;
+  --warn:#c87e3a;
+  --fail:#c84a4a;
+  --ok:#3a9a72;
+  --ring:rgba(255,255,255,.06);
+  --r0:#660044; --r1:#cc3366; --r2:#cc6600; --r3:#cccc00; --r4:#66cc00; --r5:#0066cc; --r6:#6600cc;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Syne',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5}
+code,pre,.mono{font-family:'DM Mono',ui-monospace,monospace}
+.app{display:grid;grid-template-rows:auto 1fr auto;min-height:100vh}
+header.top{display:flex;align-items:center;gap:16px;padding:14px 22px;border-bottom:1px solid var(--border);background:var(--surface)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+.brand .name{font-size:17px;color:var(--bright)}
+.brand .sub{font-size:11px;color:var(--dim);letter-spacing:.18em;text-transform:uppercase}
+nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav.tabs button{background:transparent;border:1px solid transparent;color:var(--dim);font:inherit;font-size:13px;padding:7px 12px;border-radius:8px;cursor:pointer;letter-spacing:.02em}
+nav.tabs button:hover{color:var(--bright);background:var(--s2)}
+nav.tabs button.active{color:var(--bright);background:var(--s2);border-color:var(--border)}
+.right-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+.mesh-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.mesh-dot.off{background:var(--dim);box-shadow:none}
+main{padding:24px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+.view{display:none}
+.view.active{display:flex;flex-direction:column;gap:18px}
+.view h2{font-size:20px;color:var(--bright);font-weight:600;letter-spacing:.01em}
+.view .lead{color:var(--dim);font-size:14px;max-width:680px;line-height:1.6}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.card h3{font-size:14px;color:var(--bright);margin-bottom:6px;font-weight:600;letter-spacing:.01em}
+.card .meta{font-size:11px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.card .body{font-size:13px;color:var(--text);line-height:1.55}
+.btn{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:9px 16px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:.02em}
+.btn:hover{filter:brightness(1.1)}
+.btn.secondary{background:var(--s2);color:var(--text);border:1px solid var(--border)}
+.btn.ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn.small{padding:6px 11px;font-size:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.field input,.field select,.field textarea{background:var(--s2);border:1px solid var(--border);color:var(--bright);font:inherit;padding:10px 12px;border-radius:8px;font-size:14px}
+.field textarea{min-height:90px;resize:vertical;font-family:'DM Mono',monospace;font-size:13px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--primary)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+table th{text-align:left;padding:10px 12px;color:var(--dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+table td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+table tr:hover td{background:var(--s2)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;background:var(--s2);color:var(--dim);letter-spacing:.04em}
+.pill.ok{background:rgba(58,154,114,.15);color:var(--ok)}
+.pill.warn{background:rgba(200,126,58,.15);color:var(--warn)}
+.pill.fail{background:rgba(200,74,74,.15);color:var(--fail)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 22px;text-align:center;color:var(--dim)}
+.empty .glyph{font-size:36px;margin-bottom:10px;opacity:.4}
+.empty h3{font-size:15px;color:var(--bright);margin-bottom:5px}
+.empty p{font-size:13px;max-width:380px;line-height:1.55}
+.split{display:grid;grid-template-columns:280px 1fr;gap:18px}
+.lifecycle{display:flex;gap:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow-x:auto}
+.life-step{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:74px;cursor:pointer;padding:6px}
+.life-step .glyph{font-size:18px;color:var(--dim);transition:color .2s}
+.life-step .label{font-size:10px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.life-step.done .glyph{color:var(--ok)}
+.life-step.active .glyph{color:var(--primary);text-shadow:0 0 12px var(--primary)}
+.life-step.active .label{color:var(--bright)}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--surface);border:1px solid var(--border);color:var(--bright);padding:11px 16px;border-radius:8px;font-size:13px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;z-index:100}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-color:var(--ok)}
+.toast.warn{border-color:var(--warn)}
+.toast.fail{border-color:var(--fail)}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:50;padding:18px}
+.modal.show{display:flex}
+.modal-body{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto}
+.modal h3{font-size:16px;color:var(--bright);margin-bottom:12px}
+footer.bottom{padding:11px 22px;border-top:1px solid var(--border);background:var(--surface);font-size:11px;color:var(--dim);display:flex;justify-content:space-between;align-items:center;letter-spacing:.06em;text-transform:uppercase;flex-wrap:wrap;gap:10px}
+footer.bottom a{color:var(--dim);text-decoration:none}
+footer.bottom a:hover{color:var(--bright)}
+@media (max-width:680px){
+  .split{grid-template-columns:1fr}
+  nav.tabs{gap:2px}
+  nav.tabs button{padding:6px 9px;font-size:12px}
+  main{padding:16px}
+}
+__INJECT_CSS__
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="name">__TOOL_NAME__</span>
+      <span class="sub">sovereign · prime __TOOL_PRIME__</span>
+    </div>
+    <nav class="tabs" id="tabs">__INJECT_TABS__</nav>
+    <div class="right-meta">
+      <span id="mesh-state" class="mesh-dot"></span>
+      <span id="mesh-label">mesh</span>
+    </div>
+  </header>
+
+  <main id="main">__INJECT_VIEWS__</main>
+
+  <footer class="bottom">
+    <div>◊·κ=1 · __TOOL_NAME__ · prime __TOOL_PRIME__ · sovereign single-file</div>
+    <div>
+      <a href="https://sjgant80-hub.github.io/forge-lab/">forged with forge-lab</a> ·
+      <a href="https://sjgant80-hub.github.io/fallmesh/">part of fallmesh</a>
+    </div>
+  </footer>
+</div>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-body" id="modal-body"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// __TOOL_NAME__ · sovereign · prime __TOOL_PRIME__
+// FORGED FROM YOUR WORKFLOW DESCRIPTION
+// 7 layers · 8+1 agents · zero servers · your data, your device
+// ═══════════════════════════════════════════════════════════
+
+// ── L0 IDENTITY ──────────────────────────────────────
+const NODE = {
+  id: '__TOOL_ID__',
+  name: '__TOOL_NAME__',
+  prime: __TOOL_PRIME__,
+  domain: '__TOOL_DOMAIN__',
+  built: '__TOOL_BUILT__',
+  forgeId: '__TOOL_FORGE_ID__'
+};
+window.NODE = NODE;
+
+// ── L5 PERSIST · IndexedDB + localStorage ────────────
+const DB_KEY = NODE.id + '_db_v1';
+let DB = {
+  records: [],      // primary data store
+  log: [],          // audit/event log
+  settings: { mesh_auto: true, ai_provider: 'anthropic' },
+  meta: { created: Date.now(), forged: NODE.built }
+};
+function load() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) DB = Object.assign(DB, JSON.parse(raw));
+  } catch (e) { console.warn('load failed', e); }
+}
+function save() {
+  try { localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) {}
+}
+function logEvent(type, data) {
+  DB.log.unshift({ t: Date.now(), type, data });
+  if (DB.log.length > 1000) DB.log.length = 1000;
+  save();
+}
+load();
+
+// ── L2 SWARM · agent system prompts ─────────────────
+__INJECT_AGENTS__
+
+// ── L4 BLOOM · route intent to highest-ring agent ──
+function bloomRoute(intent) {
+  const text = (intent || '').toLowerCase();
+  const scores = {};
+  for (const [id, agent] of Object.entries(AGENTS)) {
+    let s = 0;
+    for (const kw of (agent.triggers || [])) {
+      if (text.includes(kw)) s += 1;
+    }
+    scores[id] = s;
+  }
+  const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+  return best && best[1] > 0 ? best[0] : 'omega';
+}
+
+// ── L3 CASCADE · T0 offline · T1 local · T2 mesh · T3 API ─
+async function cascade(action, payload) {
+  // T0: always-works offline path
+  const t0 = T0_HANDLERS[action];
+  if (t0) {
+    try { return { tier: 'T0', result: t0(payload) }; } catch (e) {}
+  }
+  // T1: local AI via web API key (if user has one)
+  if (DB.settings.api_key) {
+    try {
+      const r = await llmCall(action, payload);
+      return { tier: 'T1', result: r };
+    } catch (e) { console.warn('T1 failed', e); }
+  }
+  // T2: mesh — try a peer
+  if (DB.settings.mesh_auto && meshChannel) {
+    try {
+      const r = await meshRequest(action, payload);
+      if (r) return { tier: 'T2', result: r };
+    } catch (e) {}
+  }
+  return { tier: 'T0', result: { error: 'no path available', action } };
+}
+const T0_HANDLERS = {
+  'echo': (p) => ({ echoed: p, at: Date.now() }),
+  'count': () => ({ records: DB.records.length, log: DB.log.length }),
+  __INJECT_T0_HANDLERS__
+};
+async function llmCall(action, payload) {
+  if (!DB.settings.api_key) throw new Error('no api key');
+  const provider = DB.settings.ai_provider || 'anthropic';
+  // anthropic only for sovereign-tool MVP
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': DB.settings.api_key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      system: AGENTS[bloomRoute(action)].sys,
+      messages: [{ role: 'user', content: JSON.stringify({ action, payload, db_summary: { records: DB.records.length } }) }]
+    })
+  });
+  if (!r.ok) throw new Error('llm ' + r.status);
+  const j = await r.json();
+  return { text: j.content[0].text };
+}
+async function meshRequest(action, payload) {
+  return new Promise((resolve) => {
+    const id = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    const handler = (e) => {
+      const m = e.data;
+      if (m && m.type === 'response:' + action && m.req === id) {
+        meshChannel.removeEventListener('message', handler);
+        resolve(m.payload);
+      }
+    };
+    meshChannel.addEventListener('message', handler);
+    meshPost('request:' + action, { payload, req: id });
+    setTimeout(() => { meshChannel.removeEventListener('message', handler); resolve(null); }, 2500);
+  });
+}
+
+// ── L1 FACE · view switching ─────────────────────────
+function setView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.dataset.view === name));
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  logEvent('view:set', { name });
+}
+
+// ── L7 ASS · lifecycle ───────────────────────────────
+const ASS = ['●', '〜', '┃', '♡', '△', '◐', '◯'];
+const ASS_LABELS = __INJECT_ASS_LABELS__;
+function lifecycle(state) {
+  const i = ASS_LABELS.findIndex(l => l.state === state);
+  if (i < 0) return;
+  const el = document.getElementById('lifecycle');
+  if (!el) return;
+  el.innerHTML = ASS_LABELS.map((l, idx) => `
+    <div class="life-step ${idx < i ? 'done' : ''} ${idx === i ? 'active' : ''}" data-state="${l.state}">
+      <div class="glyph">${ASS[idx]}</div>
+      <div class="label">${l.label}</div>
+    </div>
+  `).join('');
+}
+
+// ── L6 SKIN · helpers ────────────────────────────────
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg, kind) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (kind || '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.className = 'toast'; }, 3000);
+}
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+function showModal(html) {
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').classList.add('show');
+}
+function download(name, content, type) {
+  const blob = new Blob([content], { type: type || 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ── ◊·κ FALLMESH SHIM — same-origin handshake ───────
+let meshChannel = null;
+function meshPost(type, data) {
+  if (!meshChannel) return;
+  try {
+    meshChannel.postMessage(Object.assign(
+      { type, from: NODE.id, prime: NODE.prime, name: NODE.name, t: Date.now() },
+      data || {}
+    ));
+  } catch (e) {}
+}
+(function meshBoot() {
+  const meshEl = document.getElementById('mesh-state');
+  if (typeof BroadcastChannel === 'undefined') {
+    if (meshEl) meshEl.classList.add('off');
+    return;
+  }
+  try { meshChannel = new BroadcastChannel('fallmesh'); }
+  catch (e) { if (meshEl) meshEl.classList.add('off'); return; }
+  window.fallmesh = {
+    post: meshPost,
+    emit: (data) => meshPost(NODE.id + ':event', data),
+    request: (type, payload) => meshPost('request:' + type, { payload })
+  };
+  meshChannel.onmessage = (e) => {
+    const m = e.data;
+    if (!m || m.from === NODE.id) return;
+    if (m.type === 'mesh:ping') {
+      meshPost('mesh:pong', { url: location.origin + location.pathname, title: NODE.name, layers: 7 });
+      return;
+    }
+    __INJECT_MESH_INBOUND__
+  };
+  meshPost('node:online', { url: location.origin + location.pathname, layers: 7 });
+  try { console.log('%c◊·κ=1', 'color:#10b981;font-weight:bold;font-size:13px', NODE.name + ' · prime ' + NODE.prime + ' · mesh online'); } catch (_) {}
+})();
+
+// ── domain-specific logic injected here ──────────────
+__INJECT_DOMAIN_LOGIC__
+
+// ── boot ─────────────────────────────────────────────
+function boot() {
+  // tabs wiring
+  document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+  // initial view
+  const first = document.querySelector('#tabs button');
+  if (first) setView(first.dataset.view);
+  // domain boot
+  if (typeof onBoot === 'function') onBoot();
+  // initial lifecycle
+  if (typeof initialLifecycle === 'string') lifecycle(initialLifecycle);
+  logEvent('boot', { v: '1.0.0' });
+}
+boot();
+</script>
+</body>
+</html>
