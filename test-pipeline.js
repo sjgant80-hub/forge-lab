@@ -6,6 +6,7 @@ const { mapWorkflow } = require('./forge/map-workflow.js');
 const { selectAgents } = require('./forge/select-agents.js');
 const { build } = require('./forge/build.js');
 const { verify } = require('./forge/verify.js');
+const licence = require('./forge/licence.js');
 
 const INPUT = {
   domain: 'biochemistry lab',
@@ -80,10 +81,23 @@ agents.list.forEach(a => console.log('  ' + a.glyph + ' ' + a.role.padEnd(13) + 
 
 console.log('\nSTAGE 4 · BUILD');
 const built = build(PARSED_STUB, assStages, agents, INPUT);
+// Mimic server's post-build trial-licence injection
+let trialEnv = '';
+if (process.env.KONOMI_PRIVATE_KEY) {
+  trialEnv = licence.mintTrial({
+    forge_id: built.meta.forge_id,
+    tool_id: PARSED_STUB.tool_id,
+    tool_prime: built.meta.prime,
+    days: 30
+  });
+}
+built.html = built.html.replace('__INJECT_TRIAL_LICENCE__', trialEnv);
+built.meta.size_kb = Math.round(built.html.length / 1024);
 console.log('  size:    ' + built.meta.size_kb + ' KB');
 console.log('  prime:   ' + built.meta.prime);
 console.log('  forge_id:' + built.meta.forge_id);
 console.log('  domain:  ' + built.meta.domain);
+console.log('  trial:   ' + (trialEnv ? 'signed (' + trialEnv.length + ' chars)' : 'unsigned (no key set)'));
 
 console.log('\nSTAGE 5 · VERIFY');
 const v = verify(built.html);

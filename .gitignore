@@ -4,3 +4,7 @@ node_modules/
 *.log
 /tmp/
 .vscode/
+.konomi/
+*.pem
+forge-test.json
+forge-out.json

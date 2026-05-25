@@ -9,6 +9,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const TEMPLATE = fs.readFileSync(path.join(__dirname, '..', 'templates', 'sovereign-tool.html'), 'utf8');
+const { KONOMI_PUBKEY_B64 } = require('./licence.js');
 
 // Pool of extension primes for forged tools. Skip already-claimed ones.
 // Claimed primes across the mesh as of forge-lab launch:
@@ -308,6 +309,9 @@ function build(parsed, assStages, agentSelection, input) {
   html = html.replace('__BRAND_BRIGHT__', brand.bright);
   html = html.replace('__BRAND_PRIMARY__', brand.primary);
   html = html.replace('__BRAND_ACCENT__', brand.accent);
+
+  // konomi licence (pubkey hard-baked, trial envelope filled by server.js after build)
+  html = html.replace('__INJECT_KONOMI_PUBKEY__', KONOMI_PUBKEY_B64);
 
   // dynamic injections
   html = html.replace('__INJECT_CSS__', '');

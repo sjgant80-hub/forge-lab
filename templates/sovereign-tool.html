@@ -111,6 +111,8 @@ __INJECT_CSS__
     </div>
     <nav class="tabs" id="tabs">__INJECT_TABS__</nav>
     <div class="right-meta">
+      <span id="licence-state" style="cursor:pointer;letter-spacing:.04em" onclick="showLicenceDialog()">◊</span>
+      <span style="opacity:.4">·</span>
       <span id="mesh-state" class="mesh-dot"></span>
       <span id="mesh-label">mesh</span>
     </div>
@@ -156,6 +158,7 @@ let DB = {
   records: [],      // primary data store
   log: [],          // audit/event log
   settings: { mesh_auto: true, ai_provider: 'anthropic' },
+  licence: null,    // signed Konomi licence envelope (base64)
   meta: { created: Date.now(), forged: NODE.built }
 };
 function load() {
@@ -173,6 +176,154 @@ function logEvent(type, data) {
   save();
 }
 load();
+
+// ── ◊·κ KONOMI LICENCE · Ed25519 verification ────────
+const KONOMI = {
+  pubkey_b64: '__INJECT_KONOMI_PUBKEY__',
+  trial_envelope: '__INJECT_TRIAL_LICENCE__',  // pre-signed at forge time
+  tier: 'dead',      // dead | trial | pro | business | enterprise
+  features: [],
+  payload: null,
+  expires_at: null
+};
+
+function base64ToBytes(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function canonicalJSON(obj) {
+  if (obj === null || typeof obj !== 'object') return JSON.stringify(obj);
+  if (Array.isArray(obj)) return '[' + obj.map(canonicalJSON).join(',') + ']';
+  const keys = Object.keys(obj).sort();
+  return '{' + keys.map(k => JSON.stringify(k) + ':' + canonicalJSON(obj[k])).join(',') + '}';
+}
+
+async function verifyLicence(envelopeB64) {
+  if (!envelopeB64) return { ok: false, error: 'no envelope' };
+  if (!window.crypto?.subtle) return { ok: false, error: 'WebCrypto unavailable' };
+  try {
+    const raw = atob(envelopeB64);
+    const { payload, sig } = JSON.parse(raw);
+    // Bind to this tool — reject licences for other tools
+    if (payload.tool_id && payload.tool_id !== NODE.id) {
+      return { ok: false, error: 'licence is for ' + payload.tool_id + ', not ' + NODE.id };
+    }
+    if (payload.forge_id && payload.forge_id !== NODE.forgeId) {
+      // Soft-fail: allow if forge_id differs but tool_id matches (admin licence)
+    }
+    if (payload.expires && new Date(payload.expires) < new Date()) {
+      return { ok: false, error: 'licence expired ' + payload.expires };
+    }
+    const pubRaw = base64ToBytes(KONOMI.pubkey_b64);
+    const key = await crypto.subtle.importKey(
+      'raw', pubRaw, { name: 'Ed25519' }, false, ['verify']
+    );
+    const sigBytes = base64ToBytes(sig);
+    const msg = new TextEncoder().encode(canonicalJSON(payload));
+    const ok = await crypto.subtle.verify({ name: 'Ed25519' }, key, sigBytes, msg);
+    if (!ok) return { ok: false, error: 'signature invalid' };
+    return { ok: true, payload };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
+
+async function activateLicence(envelopeB64) {
+  const v = await verifyLicence(envelopeB64);
+  if (!v.ok) {
+    if (typeof toast === 'function') toast('licence rejected: ' + v.error, 'fail');
+    return v;
+  }
+  DB.licence = envelopeB64;
+  KONOMI.tier = v.payload.tier;
+  KONOMI.features = v.payload.features || [];
+  KONOMI.payload = v.payload;
+  KONOMI.expires_at = v.payload.expires;
+  save();
+  if (typeof toast === 'function') toast('◊ ' + v.payload.tier + ' tier activated', 'ok');
+  updateLicenceUI();
+  return v;
+}
+
+function hasFeature(name) {
+  return KONOMI.features.includes(name);
+}
+
+function isDead() {
+  return KONOMI.tier === 'dead';
+}
+
+// Async boot: try saved licence first, fall back to baked-in trial
+(async function bootLicence() {
+  if (DB.licence) {
+    const v = await verifyLicence(DB.licence);
+    if (v.ok) {
+      KONOMI.tier = v.payload.tier;
+      KONOMI.features = v.payload.features || [];
+      KONOMI.payload = v.payload;
+      KONOMI.expires_at = v.payload.expires;
+      console.log('%c◊·κ', 'color:#c2a060;font-weight:bold', 'licence ' + KONOMI.tier + ' loaded · expires ' + (KONOMI.expires_at || 'never'));
+      return;
+    }
+  }
+  // Saved licence missing or invalid — try the baked trial
+  if (KONOMI.trial_envelope && KONOMI.trial_envelope.length > 50) {
+    const v = await verifyLicence(KONOMI.trial_envelope);
+    if (v.ok) {
+      DB.licence = KONOMI.trial_envelope;
+      KONOMI.tier = v.payload.tier;
+      KONOMI.features = v.payload.features || [];
+      KONOMI.payload = v.payload;
+      KONOMI.expires_at = v.payload.expires;
+      save();
+      console.log('%c◊·κ', 'color:#c2a060;font-weight:bold', '30-day trial activated · expires ' + KONOMI.expires_at);
+      return;
+    }
+  }
+  console.log('%c◊', 'color:#8a8a8a;font-weight:bold', 'DEAD mode · paste a licence to activate');
+})();
+
+function updateLicenceUI() {
+  const el = document.getElementById('licence-state');
+  if (!el) return;
+  const tier = KONOMI.tier;
+  const colour = tier === 'dead' ? '#8a8a8a' : tier === 'trial' ? '#c2a060' : '#3a9a72';
+  el.innerHTML = '<span style="color:' + colour + ';font-weight:600">' + tier.toUpperCase() + '</span>';
+  if (KONOMI.expires_at) {
+    const d = new Date(KONOMI.expires_at);
+    el.innerHTML += ' · <span style="opacity:.7">' + d.toLocaleDateString() + '</span>';
+  }
+}
+
+function showLicenceDialog() {
+  const current = KONOMI.payload ? JSON.stringify(KONOMI.payload, null, 2) : '(no licence active — DEAD mode)';
+  const tier = KONOMI.tier;
+  showModal(`
+    <h3>◊·κ Konomi Licence</h3>
+    <div style="margin:10px 0;padding:10px;background:var(--s2);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;white-space:pre-wrap">${esc(current)}</div>
+    <p style="font-size:13px;color:var(--dim);margin:10px 0">Paste a signed licence envelope to activate Pro / Business / Enterprise tier:</p>
+    <textarea id="licence-paste" placeholder="paste licence envelope (base64) here…" style="width:100%;min-height:90px;background:var(--s2);border:1px solid var(--border);color:var(--bright);padding:10px;border-radius:6px;font-family:'DM Mono',monospace;font-size:12px"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn" onclick="activateLicence(document.getElementById('licence-paste').value.trim()).then(v=>{if(v.ok)closeModal();})">activate</button>
+      <button class="btn ghost" onclick="closeModal()">close</button>
+      <span style="margin-left:auto;font-size:11px;color:var(--dim);align-self:center">tier: ${esc(tier)}</span>
+    </div>
+  `);
+}
+
+// DEAD-mode cap on records (skips check if pro+)
+const DEAD_RECORD_CAP = 50;
+function deadCheck() {
+  if (!isDead() && !hasFeature('core')) return false;
+  if (hasFeature('unlimited_records')) return false;
+  if (DB.records.length >= DEAD_RECORD_CAP) {
+    if (typeof toast === 'function') toast('DEAD-mode cap: ' + DEAD_RECORD_CAP + ' records. Activate a licence to lift it.', 'warn');
+    showLicenceDialog();
+    return true;
+  }
+  return false;
+}
 
 // ── L2 SWARM · agent system prompts ─────────────────
 __INJECT_AGENTS__
@@ -354,7 +505,9 @@ function boot() {
   if (typeof onBoot === 'function') onBoot();
   // initial lifecycle
   if (typeof initialLifecycle === 'string') lifecycle(initialLifecycle);
-  logEvent('boot', { v: '1.0.0' });
+  // licence UI tick — give bootLicence a moment, then render
+  setTimeout(updateLicenceUI, 350);
+  logEvent('boot', { v: '1.0.0', tier: KONOMI.tier });
 }
 boot();
 </script>
