@@ -18,6 +18,8 @@ const CHECKS = [
     test: h => /KONOMI = \{/.test(h) && /pubkey_b64: '[A-Za-z0-9+/=]{40,}'/.test(h) && /async function verifyLicence/.test(h) },
   { id: 'DEAD_MODE',   label: 'DEAD-mode tier check + record cap',
     test: h => /KONOMI.tier/.test(h) && /DEAD_RECORD_CAP/.test(h) },
+  { id: 'KCC_LEDGER',  label: 'KCC ledger · Ω(KCC) ring emit + bloom',
+    test: h => /window\.kcc = \{/.test(h) && /BroadcastChannel\('fall-kcc'\)/.test(h) && /R0[^']*compute/.test(h) },
   { id: 'NO_PLACEHOLDERS', label: 'no leftover __INJECT__ markers', test: h => !/__INJECT_[A-Z_]+__/.test(h) },
   { id: 'NO_CDN_BREAK', label: 'no CDN-only deps in core logic',  test: h => !/\bunpkg\.com\b/.test(h) && !/\bcdnjs\.cloudflare\b/.test(h) },
   { id: 'SIZE',        label: 'size · under 500KB',              test: h => h.length < 500 * 1024 }
