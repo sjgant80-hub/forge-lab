@@ -299,6 +299,12 @@ function build(parsed, assStages, agentSelection, input) {
   html = html.replace(/__TOOL_BUILT__/g, builtAt);
   html = html.replace(/__TOOL_FORGE_ID__/g, forgeId);
 
+  // EU AI Act tier classification · Article 12 audit shim
+  // defaults to 'minimal' · forge consumers can override via parsed.euaiact_tier
+  const tier = (parsed.euaiact_tier && ['prohibited','high','limited','minimal'].includes(parsed.euaiact_tier))
+    ? parsed.euaiact_tier : 'minimal';
+  html = html.replace(/__TOOL_EUAIACT_TIER__/g, tier);
+
   // brand
   html = html.replace('__BRAND_BG__', brand.bg);
   html = html.replace('__BRAND_SURFACE__', brand.surface);
