@@ -66,13 +66,16 @@ function auth(req, res, next) {
 app.get('/health', (req, res) => {
   const providers = [];
   if (process.env.ANTHROPIC_API_KEY) providers.push('anthropic');
+  if (process.env.OPENAI_API_KEY)    providers.push('openai');
+  if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) providers.push('gemini');
   res.json({
-    status: 'ok',
+    status: providers.length ? 'ok' : 'degraded',
     service: 'forge-lab',
-    version: '1.0.0',
+    version: '1.1.0',
     prime: 47,
     providers,
-    forge_stages: ['parse', 'map', 'select', 'build', 'verify']
+    forge_stages: ['parse', 'map', 'select', 'build', 'verify'],
+    cascade: 'enabled · falls through credit/quota/rate-limit/server errors',
   });
 });
 
@@ -130,8 +133,10 @@ app.post('/v1/forge/expert', auth, async (req, res) => {
     if (!Array.isArray(input.workflow_steps) || input.workflow_steps.length < 2) {
       return res.status(400).json({ error: 'workflow_steps is required (min 2 steps)' });
     }
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return res.status(503).json({ error: 'no LLM provider configured' });
+    // Any provider is fine — parse.js cascade handles fallback
+    const apiKey = process.env.ANTHROPIC_API_KEY || null;
+    const hasAnyProvider = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!hasAnyProvider) return res.status(503).json({ error: 'Forge is offline: no AI provider configured on the server.' });
 
     // STAGE 1 · PARSE
     const parsed = await parseInput(input, apiKey);
@@ -203,7 +208,16 @@ app.post('/v1/forge/expert', auth, async (req, res) => {
     });
   } catch (e) {
     console.error('forge error:', e);
-    res.status(500).json({ error: 'forge failed', detail: String(e.message || e).slice(0, 500) });
+    // Surface clean user-facing error · never leak raw provider response bodies
+    const userMsg = e.userFacing
+      || (e.message && e.message.startsWith('parse ') ? 'Forge could not understand your description · try simplifying or rephrasing.' : null)
+      || 'Forge temporarily unavailable. Try again in a few minutes.';
+    res.status(e.userFacing ? 503 : 500).json({
+      error: userMsg,
+      retry_after_seconds: 60,
+      // detail kept for debugging but never the raw provider body
+      detail: (e.message || String(e)).split(':').slice(0, 2).join(':').slice(0, 200),
+    });
   }
 });
 
@@ -215,8 +229,9 @@ app.post('/v1/forge/expert.html', auth, async (req, res) => {
   if (!input.expert_description || typeof input.expert_description !== 'string') {
     return res.status(400).json({ error: 'expert_description required' });
   }
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: 'no LLM provider configured' });
+  const hasAnyProvider = process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!hasAnyProvider) return res.status(503).json({ error: 'Forge is offline: no AI provider configured on the server.' });
+  const apiKey = process.env.ANTHROPIC_API_KEY || null;
   try {
     const parsed = await parseInput(input, apiKey);
     const assStages = mapWorkflow(parsed, input);

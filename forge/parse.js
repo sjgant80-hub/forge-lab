@@ -54,6 +54,90 @@ Rules:
 
 Output ONLY the JSON. No backticks. No prose.`;
 
+// ── ◊·κ=φ⁴ · multi-provider cascade ──
+// Tries providers in order. If one returns a credit/auth/quota error,
+// falls through to the next. Throws a clean user-facing error if all fail.
+async function callLLM({ system, user }) {
+  const tried = [];
+  const providers = [];
+  if (process.env.ANTHROPIC_API_KEY) providers.push('anthropic');
+  if (process.env.OPENAI_API_KEY)    providers.push('openai');
+  if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) providers.push('gemini');
+  if (providers.length === 0) {
+    const err = new Error('NO_PROVIDER · no LLM API key configured on the server');
+    err.userFacing = 'Forge is offline: no AI provider configured. Owner needs to set ANTHROPIC_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY.';
+    throw err;
+  }
+  let lastErr = null;
+  for (const p of providers) {
+    try {
+      const text = await callProvider(p, { system, user });
+      return { text, provider: p, tried };
+    } catch (e) {
+      tried.push(p + ':' + (e.classification || 'error'));
+      lastErr = e;
+      // Only fall through on recoverable errors (credit, quota, rate-limit, server)
+      if (!e.recoverable) throw e;
+    }
+  }
+  const err = new Error('ALL_PROVIDERS_FAILED · ' + tried.join(' · '));
+  err.userFacing = 'Forge is temporarily unavailable: all AI providers are exhausted or down. Try again in a few minutes, or the owner needs to top up credits.';
+  err.cause = lastErr;
+  throw err;
+}
+
+async function callProvider(provider, { system, user }) {
+  if (provider === 'anthropic') {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4096, system, messages: [{ role: 'user', content: user }] }),
+    });
+    if (!r.ok) throw await classifyError(r, 'anthropic');
+    const j = await r.json();
+    return j.content?.[0]?.text || '';
+  }
+  if (provider === 'openai') {
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY },
+      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 4096, messages: [{ role:'system', content: system }, { role:'user', content: user }] }),
+    });
+    if (!r.ok) throw await classifyError(r, 'openai');
+    const j = await r.json();
+    return j.choices?.[0]?.message?.content || '';
+  }
+  if (provider === 'gemini') {
+    const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role:'user', parts: [{ text: user }] }] }),
+    });
+    if (!r.ok) throw await classifyError(r, 'gemini');
+    const j = await r.json();
+    return j.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+  throw new Error('unknown provider ' + provider);
+}
+
+async function classifyError(r, provider) {
+  const body = await r.text();
+  const lower = (body || '').toLowerCase();
+  let cls = 'unknown';
+  let recoverable = false;
+  if (r.status === 401 || r.status === 403)             { cls = 'auth';        recoverable = true; }
+  else if (r.status === 429)                             { cls = 'rate_limit';  recoverable = true; }
+  else if (r.status >= 500)                              { cls = 'server';      recoverable = true; }
+  else if (lower.includes('credit') || lower.includes('quota') || lower.includes('billing')) { cls = 'credit'; recoverable = true; }
+  else if (r.status === 400)                             { cls = 'bad_request'; recoverable = false; }
+  const e = new Error(provider + ' ' + r.status + ' (' + cls + ')');
+  e.classification = cls;
+  e.recoverable = recoverable;
+  e.providerStatus = r.status;
+  return e;
+}
+
 async function parseInput(input, apiKey) {
   const userBrief = JSON.stringify({
     domain: input.domain || 'general',
@@ -67,27 +151,13 @@ async function parseInput(input, apiKey) {
     ai_features: input.ai_features || {}
   }, null, 2);
 
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      system: PARSE_SYSTEM,
-      messages: [{ role: 'user', content: 'Parse this workflow:\n\n' + userBrief }]
-    })
-  });
+  // Preserve legacy signature: if apiKey was passed explicitly, make sure ANTHROPIC_API_KEY env is set for the cascade
+  if (apiKey && !process.env.ANTHROPIC_API_KEY) process.env.ANTHROPIC_API_KEY = apiKey;
 
-  if (!r.ok) {
-    const t = await r.text();
-    throw new Error('parse llm ' + r.status + ': ' + t.slice(0, 200));
-  }
-  const j = await r.json();
-  const text = j.content?.[0]?.text || '';
+  const { text, provider } = await callLLM({
+    system: PARSE_SYSTEM,
+    user: 'Parse this workflow:\n\n' + userBrief,
+  });
   // Strip backticks/markdown if model slips
   let raw = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
   let parsed;
